@@ -210,25 +210,33 @@ export default function Sankey() {
 
   function initializeNodeBreadths(columns) {
     const ky = min(columns, c => (y1 - y0 - (c.length - 1) * py) / sum(c, value));
+    let maxl = 0;
     for (const nodes of columns) {
       let y = y0;
       for (const node of nodes) {
-        node.y0 = y;
-        node.y1 = y + node.value * ky;
+        if(maxl< y + node.value*30 * ky){
+          maxl = y + node.value*30 * ky;
+        }
+      }
+    }
+    for (const nodes of columns) {
+      let y = y0;
+      for (const node of nodes) {
+        node.y0 = maxl < 700 ? y : y/maxl * 700;
+        if ((y + node.value*30 * ky) > 2) 
+          node.y1 =  maxl < 700 ? (y + node.value*30 * ky) : (y + node.value*30 * ky)/maxl * 700;
+        else node.y1 = 3;
         y = node.y1 + py;
         for (const link of node.sourceLinks) {
-          link.width = link.value * ky;
+          if((link.value*30 * ky) > 2)
+            link.width = maxl < 700 ? (link.value*30 * ky) : (link.value*30 * ky)/maxl * 700;
+          else link.width = 1;
         }
       }
       y = (y1 - y + py) / (nodes.length + 1);
-      for (let i = 0; i < nodes.length; ++i) {
-        const node = nodes[i];
-        node.y0 += y * (i + 1);
-        node.y1 += y * (i + 1);
-      }
-      reorderLinks(nodes);
     }
   }
+
 
   function computeNodeBreadths(graph) {
     const columns = computeNodeLayers(graph);
