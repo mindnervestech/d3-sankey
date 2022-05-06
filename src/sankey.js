@@ -214,8 +214,8 @@ export default function Sankey() {
     for (const nodes of columns) {
       let y = y0;
       for (const node of nodes) {
-        if(maxl < y + node.value * ky * 30){
-          maxl = y + node.value * ky * 30;
+        if(maxl < y + Math.abs(node.value) * ky * 30){
+          maxl = y + Math.abs(node.value) * ky * 30;
         }
       }
     }
@@ -223,7 +223,7 @@ export default function Sankey() {
       let y = y0;
       for (const node of nodes) {
         node.y0 = y ;
-        node.y1 = (y + node.value * ky * 30);
+        node.y1 = (y + Math.abs(node.value) * ky * 30);
         if( maxl > 600) {
           node.y0 = node.y0/maxl * 600;
           node.y1 = node.y1/maxl * 600;
@@ -231,7 +231,7 @@ export default function Sankey() {
         if((node.y1 - node.y0) < 2) node.y1 = node.y0 + 2;
         y = node.y1 + py;
         for (const link of node.sourceLinks) {
-          link.width = (link.value * ky * 30);
+          link.width = (Math.abs(link.value) * ky * 30);
           if(maxl > 600) link.width = link.width/maxl * 600;
           if(link.width < 1) link.width = 1;
         }
