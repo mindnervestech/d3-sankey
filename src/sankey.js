@@ -209,7 +209,7 @@ export default function Sankey() {
   }
 
   function initializeNodeBreadths(columns) {
-    const ky = min(columns, c => (y1 - y0 - (c.length - 1) * py) / sum(c, value)) || 10;
+    const ky = Math.abs( min(columns, c => (y1 - y0 - (c.length - 1) * py) / sum(c, value)) || 10);
     let maxl = 0;
     for (const nodes of columns) {
       let y = y0;
@@ -229,14 +229,11 @@ export default function Sankey() {
           node.y1 = node.y1/maxl * 600;
         }
         if((node.y1 - node.y0) < 2) node.y1 = node.y0 + 2;
-        y = node.y1 + py;
         for (const link of node.sourceLinks) {
-          link.width = (Math.abs(link.value) * ky * 30);
-          if(maxl > 600) link.width = link.width/maxl * 600;
+          link.width = node.y1 - node.y0;
           if(link.width < 1) link.width = 1;
         }
       }
-      y = (y1 - y + py) / (nodes.length + 1);
     }
   }
 
