@@ -38,15 +38,26 @@ function find(nodeById, id) {
 
 function computeLinkBreadths({nodes}) {
   for (const node of nodes) {
-    let y0 = node.y0;
-    let y1 = y0;
+    let y0p, y0n, y1p, y1n; // n : negetive link values and p : positive link values
+    y0p = y0n = node.y0;
+    y1p = y1n = node.y0;
     for (const link of node.sourceLinks) {
-      link.y0 = y0 + link.width / 2;
-      y0 += link.width;
+      if(link.value>0){
+        link.y0 = y0p + link.width / 2;
+        y0p += link.width;
+      } else {
+        link.y0 = y0n + link.width / 2;
+        y0n += link.width;
+      }
     }
     for (const link of node.targetLinks) {
-      link.y1 = y1 + link.width / 2;
-      y1 += link.width;
+      if(link.value>0) {
+        link.y1 = y1p + link.width / 2;
+        y1p += link.width;
+      } else {
+        link.y1 = y1n + link.width / 2;
+        y1n += link.width;
+      }
     }
   }
 }
@@ -222,18 +233,26 @@ export default function Sankey() {
     for (const nodes of columns) {
       let y = y0;
       for (const node of nodes) {
-        node.y0 = y ;
+        node.y0 = y;
         node.y1 = (y + Math.abs(node.value) * ky * 30);
-        if( maxl > 600) {
+        if( maxl > 600) { 
           node.y0 = node.y0/maxl * 600;
           node.y1 = node.y1/maxl * 600;
         }
+        y = node.y1 + py;
         if((node.y1 - node.y0) < 2) node.y1 = node.y0 + 2;
         for (const link of node.sourceLinks) {
           link.width = node.y1 - node.y0;
           if(link.width < 1) link.width = 1;
         }
       }
+      y = (y1 - y + py) / (nodes.length + 1);
+      for (let i = 0; i < nodes.length; ++i) {
+        const node = nodes[i];
+        node.y0 += y * (i + 1);
+        node.y1 += y * (i + 1);
+      }
+      reorderLinks(nodes);
     }
   }
 
