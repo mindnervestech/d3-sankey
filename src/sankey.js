@@ -73,9 +73,11 @@ export default function Sankey() {
   let nodes = defaultNodes;
   let links = defaultLinks;
   let iterations = 6;
+  let reverseSankey = false;
 
   function sankey() {
     const graph = {nodes: nodes.apply(null, arguments), links: links.apply(null, arguments)};
+    reverseSankey = graph.nodes[0].reverseSankey;
     computeNodeLinks(graph);
     computeNodeValues(graph);
     computeNodeDepths(graph);
@@ -159,9 +161,7 @@ export default function Sankey() {
 
   function computeNodeValues({nodes}) {
     for (const node of nodes) {
-      node.value = node.fixedValue === undefined
-          ? Math.max(sum(node.sourceLinks, value), sum(node.targetLinks, value))
-          : node.fixedValue;
+      node.value = node.fixedValue || Math.max(sum(node.sourceLinks, value), sum(node.targetLinks, value));
     }
   }
 
@@ -242,7 +242,10 @@ export default function Sankey() {
         y = node.y1 + py;
         if((node.y1 - node.y0) < 2) node.y1 = node.y0 + 2;
         for (const link of node.sourceLinks) {
-          link.width = node.y1 - node.y0;
+          if(reverseSankey){
+            link.width = (Math.abs(link.value) * ky * 30);
+            if(maxl > 600) link.width = link.width/maxl * 600;
+          } else link.width = node.y1 - node.y0;
           if(link.width < 1) link.width = 1;
         }
       }
