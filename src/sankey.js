@@ -38,26 +38,15 @@ function find(nodeById, id) {
 
 function computeLinkBreadths({nodes}) {
   for (const node of nodes) {
-    let y0p, y0n, y1p, y1n; // n : negetive link values and p : positive link values
-    y0p = y0n = node.y0;
-    y1p = y1n = node.y0;
+    let y0 = node.y0;
+    let y1 = y0;
     for (const link of node.sourceLinks) {
-      if(link.value>0){
-        link.y0 = y0p + link.width / 2;
-        y0p += link.width;
-      } else {
-        link.y0 = y0n + link.width / 2;
-        y0n += link.width;
-      }
+      link.y0 = y0 + link.width / 2;
+      y0 += link.width;
     }
     for (const link of node.targetLinks) {
-      if(link.value>0) {
-        link.y1 = y1p + link.width / 2;
-        y1p += link.width;
-      } else {
-        link.y1 = y1n + link.width / 2;
-        y1n += link.width;
-      }
+      link.y1 = y1 + link.width / 2;
+      y1 += link.width;
     }
   }
 }
@@ -73,11 +62,9 @@ export default function Sankey() {
   let nodes = defaultNodes;
   let links = defaultLinks;
   let iterations = 6;
-  let reverseSankey = false;
 
   function sankey() {
     const graph = {nodes: nodes.apply(null, arguments), links: links.apply(null, arguments)};
-    reverseSankey = graph.nodes[0].reverseSankey;
     computeNodeLinks(graph);
     computeNodeValues(graph);
     computeNodeDepths(graph);
@@ -235,27 +222,19 @@ export default function Sankey() {
       for (const node of nodes) {
         node.y0 = y;
         node.y1 = (y + Math.abs(node.value) * ky * 30);
-        if( maxl > 600) { 
+        if( maxl > 600) {
           node.y0 = node.y0/maxl * 600;
           node.y1 = node.y1/maxl * 600;
         }
-        y = node.y1 + py;
         if((node.y1 - node.y0) < 2) node.y1 = node.y0 + 2;
+        y = node.y1 + py;
         for (const link of node.sourceLinks) {
-          if(reverseSankey){
-            link.width = (Math.abs(link.value) * ky * 30);
-            if(maxl > 600) link.width = link.width/maxl * 600;
-          } else link.width = node.y1 - node.y0;
+          link.width = (link.value * ky * 30);
+          if(maxl > 600) link.width = link.width/maxl * 600;
           if(link.width < 1) link.width = 1;
         }
       }
       y = (y1 - y + py) / (nodes.length + 1);
-      for (let i = 0; i < nodes.length; ++i) {
-        const node = nodes[i];
-        node.y0 += y * (i + 1);
-        node.y1 += y * (i + 1);
-      }
-      reorderLinks(nodes);
     }
   }
 
