@@ -38,15 +38,26 @@ function find(nodeById, id) {
 
 function computeLinkBreadths({nodes}) {
   for (const node of nodes) {
-    let y0 = node.y0;
-    let y1 = y0;
+    let y0p, y0n, y1p, y1n; // n : negetive link values and p : positive link values
+    y0p = y0n = node.y0;
+    y1p = y1n = node.y0;
     for (const link of node.sourceLinks) {
-      link.y0 = y0 + link.width / 2;
-      y0 += link.width;
+      if(link.value>0){
+        link.y0 = y0p + link.width / 2;
+        y0p += link.width;
+      } else {
+        link.y0 = y0n + link.width / 2;
+        y0n += link.width;
+      }
     }
     for (const link of node.targetLinks) {
-      link.y1 = y1 + link.width / 2;
-      y1 += link.width;
+      if(link.value>0) {
+        link.y1 = y1p + link.width / 2;
+        y1p += link.width;
+      } else {
+        link.y1 = y1n + link.width / 2;
+        y1n += link.width;
+      }
     }
   }
 }
@@ -148,7 +159,12 @@ export default function Sankey() {
 
   function computeNodeValues({nodes}) {
     for (const node of nodes) {
-      node.value = node.fixedValue || Math.max(sum(node.sourceLinks, value), sum(node.targetLinks, value));
+      node.value = node.fixedValue || Math.max(
+        node.sourceLinks.reduce((sum, link) => { return sum + (link.value < 0 ? 0 : link.value) }, 0), // Add All Positive values
+        node.sourceLinks.reduce((sum, link) => { return sum + (link.value > 0 ? 0 : Math.abs(link.value)) }, 0), // Add negative values
+        node.targetLinks.reduce((sum, link) => { return sum + (link.value < 0 ? 0 : link.value) }, 0), // Add All Positive values
+        node.targetLinks.reduce((sum, link) => { return sum + (link.value > 0 ? 0 : Math.abs(link.value)) }, 0), // Add negative values
+        0)
     }
   }
 
@@ -207,13 +223,13 @@ export default function Sankey() {
   }
 
   function initializeNodeBreadths(columns) {
-    const ky = Math.abs( min(columns, c => (y1 - y0 - (c.length - 1) * py) / sum(c, value)) || 10);
+    const ky = min(columns, c => (y1 - y0 - (c.length - 1) * py) / sum(c, value)) || 10;
     let maxl = 0;
     for (const nodes of columns) {
       let y = y0;
       for (const node of nodes) {
-        if(maxl < y + Math.abs(node.value) * ky * 30){
-          maxl = y + Math.abs(node.value) * ky * 30;
+        if(maxl < y + node.value * ky * 30){
+          maxl = y + node.value * ky * 30;
         }
       }
     }
@@ -221,7 +237,7 @@ export default function Sankey() {
       let y = y0;
       for (const node of nodes) {
         node.y0 = y;
-        node.y1 = (y + Math.abs(node.value) * ky * 30);
+        node.y1 = (y + node.value * ky * 30);
         if( maxl > 600) {
           node.y0 = node.y0/maxl * 600;
           node.y1 = node.y1/maxl * 600;
@@ -229,7 +245,7 @@ export default function Sankey() {
         if((node.y1 - node.y0) < 2) node.y1 = node.y0 + 2;
         y = node.y1 + py;
         for (const link of node.sourceLinks) {
-          link.width = (link.value * ky * 30);
+          link.width = (Math.abs(link.value) * ky * 30);
           if(maxl > 600) link.width = link.width/maxl * 600;
           if(link.width < 1) link.width = 1;
         }
